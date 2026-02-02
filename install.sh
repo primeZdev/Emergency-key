@@ -2,7 +2,7 @@
 
 # Clone the repository from GitHub
 cd /opt/
-git clone https://github.com/yourusername/Emergency-key.git
+git clone https://github.com/primeZdev/Emergency-key.git
 
 cd Emergency-key
 
@@ -49,6 +49,10 @@ case "$1" in
     update)
         cd /opt/Emergency-key && git pull
         ;;  
+    edit-keys)
+        nano /opt/Emergency-key/keys.txt
+        systemctl restart em-key
+        ;;  
     stop)
         systemctl stop em-key
         ;;  
@@ -59,7 +63,7 @@ case "$1" in
         rm /usr/local/bin/em-key
         ;;  
     *)
-        echo "Usage: em-key {restart|update|stop|uninstall}"
+        echo "Usage: em-key {restart|update|edit-keys|stop|uninstall}"
         exit 1
         ;;
 esac
