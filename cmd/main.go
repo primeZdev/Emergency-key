@@ -22,5 +22,5 @@ func main() {
 
 	})
 
-	app.Listen(":" + config.Port)
+	app.Listen("127.0.0.1:" + config.Port)
 }
