@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Clone the repository from GitHub
+# Clone the repository
 cd /opt/
 if [ -d "Emergency-key" ]; then
     cd Emergency-key
@@ -9,27 +9,33 @@ else
     cd Emergency-key
 fi
 
-# Create keys.txt file for user configs
+# Config files
 touch keys.txt
 cp .env.example .env
 
-read -p "Enter PORT (default 3000): " PORT
+read -p "Enter PORT for app (default 3000): " PORT
 PORT=${PORT:-3000}
 read -p "Enter API_KEY: " API_KEY
-read -p "Enter DOMAIN (for HTTPS certificate, leave empty for self-signed): " DOMAIN
+read -p "Enter DOMAIN: " DOMAIN
 
 echo "PORT=$PORT" > .env
 echo "API_KEY=$API_KEY" >> .env
 echo "DOMAIN=$DOMAIN" >> .env
-# Install certbot if not installed
-if ! command -v certbot &> /dev/null; then
-    apt update && apt install -y certbot
+
+# Install Caddy if not installed
+if ! command -v caddy &> /dev/null; then
+    apt update && apt install -y debian-archive-keyring apt-transport-https curl gnupg
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+    tee /etc/apt/sources.list.d/caddy-stable.list <<EOF
+deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main
+deb-src [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main
+EOF
+    apt update
+    apt install -y caddy
+
 fi
-# Get certificate
-certbot certonly --standalone -d $DOMAIN --agree-tos --email admin@gmail.com -n
 
-
-# Create systemd service
+# Create systemd service for app
 cat <<EOL > /etc/systemd/system/em-key.service
 [Unit]
 Description=Emergency Key Service
@@ -44,7 +50,7 @@ Restart=always
 WantedBy=multi-user.target
 EOL
 
-# Create a service for managing the application
+# Create CLI em-keys
 cat <<'EOL' > /usr/local/bin/em-keys
 #!/bin/bash
 
@@ -82,9 +88,23 @@ EOL
 
 chmod +x /usr/local/bin/em-keys
 
-# Run
 systemctl daemon-reload
 systemctl enable em-key.service
 systemctl start em-key.service
+
+# Create Caddyfile
+cat <<EOL > /etc/caddy/Caddyfile
+$DOMAIN {
+    reverse_proxy localhost:$PORT
+}
+EOL
+
+# Restart Caddy to apply configuration
+systemctl enable --now caddy
+systemctl reload caddy
+echo "Installation complete."
+
+echo "Caddy is handling HTTPS on https://$DOMAIN/$API_KEY"
+
 
 echo "Installation complete. Use 'em-keys edit-keys' to edit your v2ray keys."

@@ -26,15 +26,9 @@ func LoadConfig() *Config {
 	apiKey := os.Getenv("API_KEY")
 	domain := os.Getenv("DOMAIN")
 
-	var certPath, keyPath string
-	certPath = "/etc/letsencrypt/live/" + domain + "/fullchain.pem"
-	keyPath = "/etc/letsencrypt/live/" + domain + "/privkey.pem"
-
 	return &Config{
-		Port:     port,
-		APIKey:   apiKey,
-		Domain:   domain,
-		CertPath: certPath,
-		KeyPath:  keyPath,
+		Port:   port,
+		APIKey: apiKey,
+		Domain: domain,
 	}
 }
