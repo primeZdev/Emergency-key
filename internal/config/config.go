@@ -8,8 +8,11 @@ import (
 )
 
 type Config struct {
-	Port   string
-	APIKey string
+	Port     string
+	APIKey   string
+	Domain   string
+	CertPath string
+	KeyPath  string
 }
 
 // LoadConfig loads all values from .env
@@ -21,9 +24,17 @@ func LoadConfig() *Config {
 
 	port := os.Getenv("PORT")
 	apiKey := os.Getenv("API_KEY")
+	domain := os.Getenv("DOMAIN")
+
+	var certPath, keyPath string
+	certPath = "/etc/letsencrypt/live/" + domain + "/fullchain.pem"
+	keyPath = "/etc/letsencrypt/live/" + domain + "/privkey.pem"
 
 	return &Config{
-		Port:   port,
-		APIKey: apiKey,
+		Port:     port,
+		APIKey:   apiKey,
+		Domain:   domain,
+		CertPath: certPath,
+		KeyPath:  keyPath,
 	}
 }

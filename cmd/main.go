@@ -19,8 +19,7 @@ func main() {
 
 	app.Get("/"+config.APIKey, func(c *fiber.Ctx) error {
 		return c.SendString(string(keys))
-
 	})
 
-	app.Listen(":" + config.Port)
+	log.Fatal(app.ListenTLS(":"+config.Port, config.CertPath, config.KeyPath))
 }
